@@ -1,4 +1,4 @@
-# TeamworkData
+# Comparing e-shops’ online ratings with social media footprint 
 
 ## Project Proposal by Adrien Boyer and Matej Maivald
 
