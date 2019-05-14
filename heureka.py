@@ -19,8 +19,9 @@ class Heureka:
         """
 
         self.r = req or RequestHelper()
-        # if not isinstance(req, RequestHelper):
-        #     raise NotImplementedError('Only RequestHelper instance can be passed in req argument')
+        if not isinstance(self.r, RequestHelper):
+            raise NotImplementedError('Only RequestHelper instance can be passed in req argument, otherwise'
+                                      'leave it to its default value.')
 
         self._next_link = None
         self._output_from_list_page = []
@@ -64,23 +65,23 @@ class Heureka:
             }
                 for tr in sel.xpath('/html/body/div[2]/div/div[2]/div/table//tr')])
 
-    def _extend_list_page_by_details(self):
+    def _extend_list_page_by_details(self, how_many):
         """
         For the _output_from_list_page dictionary, gets the fields from the detailed page and
         saves it to the heureka_output dictionary.
         """
-        for eshop in self._output_from_list_page:
+        for eshop in self._output_from_list_page[:how_many]:
             self.heureka_output.append(self._download_eshop_detail(eshop))
 
-    def _extend_list_page_by_details_quick(self, threads=10):
+    def _extend_list_page_by_details_in_threads(self, how_many, threads=10):
         """
         The same functionality as _extend_list_page_by_details method, but uses threads. Use with caution, otherwise,
         you might get blocked.
 
         :param int threads: Number of connections to be opened in parallel threads.
         """
-        self.heureka_output = list(
-            ThreadPoolExecutor(threads).map(self._download_eshop_detail, self._output_from_list_page))
+        self.heureka_output.extend(list(
+            ThreadPoolExecutor(threads).map(self._download_eshop_detail, self._output_from_list_page[:how_many])))
 
     def _download_eshop_detail(self, eshop):
         """
@@ -113,6 +114,11 @@ class Heureka:
                          'span.c-shop-detail-stats__value::text').get()
         output['rating'] = float(rating.replace(',', '.'))
 
+        negative_reviews_count = sel.xpath('//*[@id="filtr"]/div/nav/ul/li[3]/a/@data-count').get()
+        output['reviews_negative_count'] = float(re.sub(r'&nbsp;|\s+','',negative_reviews_count))
+
+        positive_reviews_count = sel.xpath('//*[@id="filtr"]/div/nav/ul/li[2]/a/@data-count').get()
+        output['reviews_positive_count'] = float(re.sub(r'&nbsp;|\s+', '', positive_reviews_count))
         return output
 
     def run(self, how_many_pages_download):
@@ -125,6 +131,6 @@ class Heureka:
         listings_needed = (how_many_pages_download // 20) + 1
         self._download_list_of_links(listings_needed)
         if self._use_multiple_threads:
-            self._extend_list_page_by_details_quick()
+            self._extend_list_page_by_details_in_threads(how_many_pages_download)
         else:
-            self._extend_list_page_by_details()
+            self._extend_list_page_by_details(how_many_pages_download)

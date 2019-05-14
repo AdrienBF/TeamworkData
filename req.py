@@ -1,7 +1,7 @@
-import requests
 import random
 import time
 
+import requests
 from parsel import Selector
 
 
@@ -10,7 +10,7 @@ class RequestHelper:
     This class attempts to enable to make requests more easily.
     """
 
-    def __init__(self, timeout=10, maximum_retries=5, verify=False, proxy_list=None):
+    def __init__(self, timeout=10, maximum_retries=5, verify=True, proxy_list=None):
         """
         __init__ method for RequestHelper class
 
