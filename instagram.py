@@ -1,6 +1,9 @@
 import json
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
+
+from tqdm import tqdm
 
 from req import RequestHelper
 
@@ -41,9 +44,11 @@ $                         # end of string
 
         :param list instagram_accounts_list: List of instagram accounts' ids.
         """
+
+        print(f' - getting data from Instagram in {self._concurrent_threads_count} threads:')
         self.output.extend(list(
-            ThreadPoolExecutor(self._concurrent_threads_count).map(self._parse_data_from_instagram_account,
-                                                                   instagram_accounts_list)))
+            tqdm(ThreadPoolExecutor(self._concurrent_threads_count).map(self._parse_data_from_instagram_account,
+                                                                        instagram_accounts_list))))
 
     def _run_single_thread(self, instagram_accounts_list):
         """
@@ -51,7 +56,9 @@ $                         # end of string
 
         :param list instagram_accounts_list: List of instagram accounts' ids.
         """
-        self.output.extend([self._parse_data_from_instagram_account(account) for account in instagram_accounts_list])
+        print(f' - getting data from Instagram:')
+        self.output.extend(
+            [self._parse_data_from_instagram_account(account) for account in tqdm(instagram_accounts_list)])
 
     def _parse_data_from_instagram_account(self, account_id):
         """
@@ -104,7 +111,11 @@ $                         # end of string
 
         :param list instagram_accounts_list:  List of instagram accounts' ids.
         """
+        start_time = time.time()
+
         if self._use_multiple_threads:
             self._run_multiple_threads(instagram_accounts_list=instagram_accounts_list)
         else:
             self._run_single_thread(instagram_accounts_list=instagram_accounts_list)
+
+        print(f'Data from Instagram pages finished in {round(time.time() - start_time, 3)}s.')

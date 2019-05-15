@@ -1,5 +1,6 @@
 import random
 import time
+from functools import lru_cache
 
 import requests
 from parsel import Selector
@@ -10,7 +11,7 @@ class RequestHelper:
     This class attempts to enable to make requests more easily.
     """
 
-    def __init__(self, timeout=10, maximum_retries=5, verify=True, proxy_list=None):
+    def __init__(self, timeout=10, maximum_retries=5, verify=True, proxy_list=None, disable_debug_print=False):
         """
         __init__ method for RequestHelper class
 
@@ -23,7 +24,9 @@ class RequestHelper:
         self.timeout = timeout
         self.maximum_retries = maximum_retries
         self.verify = verify
+        self._disable_debug_print = disable_debug_print
 
+    @lru_cache(maxsize=5000, typed=False)
     def make_request(self, url):
         """
         Making requests with retry logic and headers mocking real-world browser
@@ -49,7 +52,8 @@ class RequestHelper:
                 if self.proxy_list:
                     proxy_host = random.choice(self.proxy_list)
                     proxy_dict = {'http': proxy_host, 'https': proxy_host}
-                print(f'Attempt {attempt} for {url}.')
+                if not self._disable_debug_print:
+                    print(f'Attempt {attempt} for {url}.')
                 r = requests.get(url, headers=headers, timeout=self.timeout, verify=self.verify, proxies=proxy_dict)
                 return r
             except Exception as e:

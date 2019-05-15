@@ -5,20 +5,22 @@ from instagram import Instagram
 import pandas as pd
 
 
-def download_all(count_of_eshops=30):
+def download_all(count_of_eshops=30, req=None):
     """
     A function for downloading it all-at-once.
 
+    :param req:
     :param int count_of_eshops: Number of eshops to include.
     :return pandas.DataFrame:
     """
-    h = Heureka()
+
+    h = Heureka(req=req)
     h.run(count_of_eshops)
 
-    e = EshopWebsite()
+    e = EshopWebsite(req=req)
     e.run([shop['link'] for shop in h.heureka_output])
 
-    i = Instagram()
+    i = Instagram(req=req)
     i.run([shop['instagram'] for shop in e.output if shop['instagram']])
 
     df_h = pd.DataFrame(h.heureka_output).set_index('link')

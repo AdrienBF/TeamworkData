@@ -1,6 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 from collections import Counter
 import re
+import time
+
+from tqdm import tqdm
 
 from req import RequestHelper
 
@@ -33,8 +36,11 @@ class EshopWebsite:
 
         :param list website_list: List of strings containing urls (with protocol specified).
         """
-        self.output.extend(list(
-            ThreadPoolExecutor(self._concurrent_threads_count).map(self._parse_data_from_eshop_website, website_list)))
+        print(f' - getting data from eshop pages in {self._concurrent_threads_count} threads:')
+        t = ThreadPoolExecutor(self._concurrent_threads_count)
+
+        self.output.extend(
+            list(tqdm(t.map(self._parse_data_from_eshop_website, website_list), total=len(website_list))))
 
     def _parse_data_from_eshop_website(self, url):
         """
@@ -85,4 +91,8 @@ class EshopWebsite:
 
         :param list website_list:  List of strings containing urls (with protocol specified).
         """
+        start_time = time.time()
+
         self._run_multiple_threads(website_list=website_list)
+
+        print(f'Data from Eshop pages finished in {round(time.time() - start_time, 3)}s.')

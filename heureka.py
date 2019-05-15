@@ -1,9 +1,10 @@
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor
 import re
+import time
 
 from req import RequestHelper
-
+from tqdm import tqdm
 
 class Heureka:
     """
@@ -38,13 +39,12 @@ class Heureka:
         """
         # either continue where left or start at the beginning
         self._next_link = self._next_link or 'https://obchody.heureka.cz/'
-        for _ in range(how_many_pages_download):
-            print(f'Getting link: {self._next_link}')
-            sel = self.r.get_selector(self._next_link)
 
+        print(' - getting Heureka lists of eshops:')
+        for _ in tqdm(range(how_many_pages_download)):
+            sel = self.r.get_selector(self._next_link)
             # parse info from the listing page
             self._parse_listing_page(sel)
-
             # get the link for the "next" page
             self._next_link = urljoin(self._next_link,
                                       sel.xpath('/html/body/div[2]/div/div[2]/nav/ol//a[@rel="next"]/@href').get())
@@ -70,7 +70,8 @@ class Heureka:
         For the _output_from_list_page dictionary, gets the fields from the detailed page and
         saves it to the heureka_output dictionary.
         """
-        for eshop in self._output_from_list_page[:how_many]:
+        print(' - getting Heureka page details:')
+        for eshop in tqdm(self._output_from_list_page[:how_many]):
             self.heureka_output.append(self._download_eshop_detail(eshop))
 
     def _extend_list_page_by_details_in_threads(self, how_many, threads=10):
@@ -127,10 +128,14 @@ class Heureka:
 
         :param int how_many_pages_download: How many pages should be there in the output.
         """
-        # there are 20 pages for
+        start_time = time.time()
+
+        # there are 20 eshops on 1 listing page
         listings_needed = (how_many_pages_download // 20) + 1
         self._download_list_of_links(listings_needed)
         if self._use_multiple_threads:
             self._extend_list_page_by_details_in_threads(how_many_pages_download)
         else:
             self._extend_list_page_by_details(how_many_pages_download)
+
+        print(f'Data from Heureka finished in {round(time.time() - start_time, 3)}s.')
