@@ -3,10 +3,13 @@ from concurrent.futures import ThreadPoolExecutor
 import re
 import time
 
-from req import RequestHelper
 from tqdm import tqdm
 
-class Heureka:
+from req import RequestHelper
+from base import BaseDownload
+
+
+class Heureka(BaseDownload):
     """
     Downloads the data from the Heureka from the obchody.heureka.cz page.
     """
@@ -28,7 +31,7 @@ class Heureka:
         self._output_from_list_page = []
         self._use_multiple_threads = use_multiple_threads
 
-        self.heureka_output = []
+        self.output = []
 
     def _download_list_of_links(self, how_many_pages_download=2):
         """
@@ -68,11 +71,11 @@ class Heureka:
     def _extend_list_page_by_details(self, how_many):
         """
         For the _output_from_list_page dictionary, gets the fields from the detailed page and
-        saves it to the heureka_output dictionary.
+        saves it to the output dictionary.
         """
         print(' - getting Heureka page details:')
         for eshop in tqdm(self._output_from_list_page[:how_many]):
-            self.heureka_output.append(self._download_eshop_detail(eshop))
+            self.output.append(self._download_eshop_detail(eshop))
 
     def _extend_list_page_by_details_in_threads(self, how_many, threads=10):
         """
@@ -81,7 +84,7 @@ class Heureka:
 
         :param int threads: Number of connections to be opened in parallel threads.
         """
-        self.heureka_output.extend(list(
+        self.output.extend(list(
             ThreadPoolExecutor(threads).map(self._download_eshop_detail, self._output_from_list_page[:how_many])))
 
     def _download_eshop_detail(self, eshop):
@@ -95,7 +98,8 @@ class Heureka:
         eshop.update(self._parse_detail_page(sel))
         return eshop
 
-    def _parse_detail_page(self, sel):
+    @staticmethod
+    def _parse_detail_page(sel):
         """
         Parses the detail page
 
@@ -116,7 +120,7 @@ class Heureka:
         output['rating'] = float(rating.replace(',', '.'))
 
         negative_reviews_count = sel.xpath('//*[@id="filtr"]/div/nav/ul/li[3]/a/@data-count').get()
-        output['reviews_negative_count'] = float(re.sub(r'&nbsp;|\s+','',negative_reviews_count))
+        output['reviews_negative_count'] = float(re.sub(r'&nbsp;|\s+', '', negative_reviews_count))
 
         positive_reviews_count = sel.xpath('//*[@id="filtr"]/div/nav/ul/li[2]/a/@data-count').get()
         output['reviews_positive_count'] = float(re.sub(r'&nbsp;|\s+', '', positive_reviews_count))
@@ -124,7 +128,7 @@ class Heureka:
 
     def run(self, how_many_pages_download):
         """
-        Main method for the class, output is stored in the heureka_output attribute.
+        Main method for the class, output is stored in the output attribute.
 
         :param int how_many_pages_download: How many pages should be there in the output.
         """

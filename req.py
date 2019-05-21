@@ -1,6 +1,7 @@
 import random
 import time
 from functools import lru_cache
+from warnings import warn
 
 import requests
 from parsel import Selector
@@ -46,6 +47,7 @@ class RequestHelper:
             'accept-language': 'en,cs;q=0.9,sk;q=0.8,en-GB;q=0.7,en-US;q=0.6',
         }
 
+        # a basic logic for retries of failed requests
         for attempt in range(self.maximum_retries):
             try:
                 proxy_dict = None
@@ -54,11 +56,15 @@ class RequestHelper:
                     proxy_dict = {'http': proxy_host, 'https': proxy_host}
                 if not self._disable_debug_print:
                     print(f'Attempt {attempt} for {url}.')
+
+                # request for the url
                 r = requests.get(url, headers=headers, timeout=self.timeout, verify=self.verify, proxies=proxy_dict)
                 return r
             except Exception as e:
+                # if the number of attempts is not reached, issue a warning, sleep and then continue
                 if attempt < self.maximum_retries - 1:
                     time.sleep(10)
+                    warn(f'Encountered an exception: {type(e).__name__}: {e}')
                     continue
                 raise
 

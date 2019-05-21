@@ -6,9 +6,10 @@ import time
 from tqdm import tqdm
 
 from req import RequestHelper
+from base import BaseDownload
 
 
-class EshopWebsite:
+class EshopWebsite(BaseDownload):
     """
     Downloads the data from eshop's page.
     """
@@ -55,7 +56,8 @@ class EshopWebsite:
 
         return output_dict
 
-    def _parse_instagram_links(self, sel):
+    @staticmethod
+    def _parse_instagram_links(sel):
         """
         This method finds all candidate instagram links from the supplied object and returns the instagram account name
         that is most common on the page.

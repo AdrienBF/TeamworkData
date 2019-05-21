@@ -6,9 +6,10 @@ from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
 from req import RequestHelper
+from base import BaseDownload
 
 
-class Instagram:
+class Instagram(BaseDownload):
     """
     Downloads the data from Instagram profile pages.
     """
@@ -81,6 +82,7 @@ $                         # end of string
         output_dict['instagram_posts_average_like'] = sum(p['node']['edge_liked_by']['count'] for p in posts) / len(
             posts)
 
+        # descriptions of photos for accessibility
         descriptions = (re.sub(r'^Image may contain:\s+|No photo description available\.', '',
                                p['node'].get('accessibility_caption', '')) for p in posts)
         output_dict['instagram_classified_descriptions'] = ';'.join(d for d in descriptions if d)
@@ -100,9 +102,11 @@ $                         # end of string
         if 'Sorry, this page' in i_s.get():
             # the instagram profile does not exist, see for example https://instagram.com/dafdsfasdfjefwollaskjf
             return None
+        # finding the json in the page
         output_object = json.loads(
             re.match(self.RGX_PATTERN_INSTAGRAM, i_s.xpath('/html/body/script[1]/text()').get(), re.VERBOSE)[
                 'json_obj'])
+        # returning the part which contains data
         return output_object['entry_data']['ProfilePage'][0]['graphql']['user']
 
     def run(self, instagram_accounts_list):

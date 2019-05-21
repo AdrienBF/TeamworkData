@@ -1,5 +1,9 @@
 # Comparing e-shops’ online ratings with social media footprint 
 
+## Output of the analysis
+Output can be found in the iPython notebook file called `main_analysis.ipynb`, and its snapshot converted to html (with all images) is to be found in the `main_analysis.html` file.
+
+
 ## Project Proposal by Adrien Boyer and Matej Maivald
 
 In our project, we will try to compare Czech e-shop’s ratings from Heureka.cz with social media footprint - the number of posts and followers.
@@ -14,7 +18,6 @@ The thirst three parts will be designed as Python scripts, which will be trigger
 
 
 
-## Some ideas: 
+## Some ideas
   - Use the Instagram's prediction of what is supposed to be on the pictures
   - Get average of likes
-  - 
